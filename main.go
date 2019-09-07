@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.luukdegram/reproksie"
 )
 
 func main() {
-	app := NewApp(appConfig{
+	app := reproksie.NewApp(AppConfig{
 		Name:    "Reproksie",
 		Author:  "Luuk de Gram",
 		Version: "0.1",

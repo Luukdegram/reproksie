@@ -1,14 +1,12 @@
-package main
+package reproksie
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 )
@@ -27,11 +25,11 @@ func newReproksie() *reproksie {
 
 //ServeHTTP contains the proxy logic. It connects the configuration's applications and points a request towards it.
 func (reproksie *reproksie) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("X-origin", r.Host)
+	w.Header().Set("X-Forwarded-Host", r.Header.Get("Host"))
 	host := r.URL.Hostname()
 	for _, app := range reproksie.Applications {
 		if app.Host == host {
-			url, err := url.Parse(string(app.Protocol) + "://localhost:" + strconv.Itoa(app.Port))
+			url, err := url.Parse(string(app.Protocol) + "://127.0.0.1:" + strconv.Itoa(app.Port))
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -42,29 +40,9 @@ func (reproksie *reproksie) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//parseConfig parses the provided json data and sets all configuration that reproksie needs.
-func (reproksie *reproksie) parseConfig(data []byte) error {
-	var config ReproksieConfig
-	err := json.Unmarshal(data, &config)
-	if err != nil {
-		return err
-	}
-	reproksie.ReproksieConfig = config
-
-	if len(config.LogPath) != 0 {
-		file, err := os.OpenFile(config.LogPath,
-			os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			return err
-		}
-		reproksie.logger = log.New(file, "Reproksie", log.LstdFlags)
-	}
-
-	return nil
-}
-
 //start starts the reproksie service
-func (reproksie *reproksie) start() error {
+func (reproksie *reproksie) start(config *ReproksieConfig) error {
+	reproksie.ReproksieConfig = *config
 	errors := make(chan error)
 
 	if len(reproksie.EntryPoints) == 0 {
