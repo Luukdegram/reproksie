@@ -8,15 +8,15 @@ import (
 )
 
 func main() {
-	app := reproksie.NewApp(reproksie.AppConfig{
+	err := reproksie.NewApp(reproksie.AppConfig{
 		Name:    "Reproksie",
 		Author:  "Luuk de Gram",
 		Version: "0.1",
 		Usage:   "Test",
-	})
-	err := app.Run()
+	}).Run(os.Args)
+
 	if err != nil {
 		fmt.Println("An error occured: ", err)
-		os.Exit(0)
+		os.Exit(2)
 	}
 }

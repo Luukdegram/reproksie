@@ -27,8 +27,7 @@ var configData = []byte(`
             "port": 8080,
             "protocol": "http"
         }
-    ],
-    "log_path":"example/test.log"
+	]
 }
 `)
 
@@ -39,7 +38,6 @@ func TestParseConfig(t *testing.T) {
 			&EntryPoint{Name: "http", Address: ":8080"},
 			&EntryPoint{Name: "https", Address: ":4433", Protocol: "https", TLS: TLS{CertFile: "example/test.crt", KeyFile: "example/test.key"}}},
 		Applications: []*Application{&Application{Host: "example.com", Port: 8080, Protocol: "http"}},
-		LogPath:      "example/test.log",
 	}
 
 	if err != nil {
@@ -54,10 +52,6 @@ func TestParseConfig(t *testing.T) {
 		t.Errorf("Incorrect length of applications, got: %d, want: %d.", len(config.Applications), len(expectedConfig.Applications))
 	}
 
-	if config.LogPath != expectedConfig.LogPath {
-		t.Errorf("Incorrect logpath, got: %s, want: %s", config.LogPath, expectedConfig.LogPath)
-	}
-
 	if config.EntryPoints[1].TLS.CertFile != expectedConfig.EntryPoints[1].TLS.CertFile {
 		t.Errorf("Incorrect certFile, got: %s, want: %s", config.EntryPoints[1].TLS.CertFile, expectedConfig.EntryPoints[1].TLS.CertFile)
 	}
@@ -70,7 +64,7 @@ func TestParseConfig(t *testing.T) {
 func TestFailParseConfig(t *testing.T) {
 	_, err := ParseConfig([]byte(`
 	{
-		"entrypoints"
+		"entrypoints",
 	}
 	`))
 

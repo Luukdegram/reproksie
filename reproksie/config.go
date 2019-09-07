@@ -57,7 +57,7 @@ func ParseConfig(data []byte) (*Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		config.Logger = log.New(file, "Reproksie", log.LstdFlags)
+		config.Logger = log.New(file, "", log.LstdFlags)
 	}
 
 	return &config, nil
