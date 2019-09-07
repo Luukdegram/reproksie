@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.luukdegram/reproksie"
+	"github.com/luukdegram/reproksie/reproksie"
 )
 
 func main() {
-	app := reproksie.NewApp(AppConfig{
+	app := reproksie.NewApp(reproksie.AppConfig{
 		Name:    "Reproksie",
 		Author:  "Luuk de Gram",
 		Version: "0.1",

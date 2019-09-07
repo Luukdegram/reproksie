@@ -34,7 +34,7 @@ var configData = []byte(`
 
 func TestParseConfig(t *testing.T) {
 	config, err := ParseConfig(configData)
-	expectedConfig := ReproksieConfig{
+	expectedConfig := Config{
 		EntryPoints: []*EntryPoint{
 			&EntryPoint{Name: "http", Address: ":8080"},
 			&EntryPoint{Name: "https", Address: ":4433", Protocol: "https", TLS: TLS{CertFile: "example/test.crt", KeyFile: "example/test.key"}}},

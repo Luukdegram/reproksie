@@ -13,7 +13,7 @@ import (
 
 //reproksie redirects a request to the correct internal application. This allows for serving applications to the internet without opening all ports.
 type reproksie struct {
-	ReproksieConfig
+	Config
 	servers chan error
 	logger  *log.Logger
 }
@@ -41,8 +41,8 @@ func (reproksie *reproksie) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 //start starts the reproksie service
-func (reproksie *reproksie) start(config *ReproksieConfig) error {
-	reproksie.ReproksieConfig = *config
+func (reproksie *reproksie) start(config *Config) error {
+	reproksie.Config = *config
 	errors := make(chan error)
 
 	if len(reproksie.EntryPoints) == 0 {

@@ -6,8 +6,8 @@ import (
 	"os"
 )
 
-//ReproksieConfig holds all configuration data needed to setup Reproksie.
-type ReproksieConfig struct {
+//Config holds all configuration data needed to setup Reproksie.
+type Config struct {
 	EntryPoints  []*EntryPoint
 	Applications []*Application
 	LogPath      string `json:"log_path"`
@@ -44,8 +44,8 @@ const (
 )
 
 //ParseConfig parses the provided json data and sets all configuration that reproksie needs.
-func ParseConfig(data []byte) (*ReproksieConfig, error) {
-	var config ReproksieConfig
+func ParseConfig(data []byte) (*Config, error) {
+	var config Config
 	err := json.Unmarshal(data, &config)
 	if err != nil {
 		return nil, err
