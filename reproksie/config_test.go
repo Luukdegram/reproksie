@@ -74,14 +74,14 @@ func TestFailParseConfig(t *testing.T) {
 }
 
 func TestProtocol(t *testing.T) {
-	got := secure
+	got := Secure
 	want := "https"
 
 	if string(got) != want {
 		t.Errorf("Incorrect protocol, got: %s, want: %s.", got, want)
 	}
 
-	got = nonSecure
+	got = NonSecure
 	want = "http"
 
 	if string(got) != want {

@@ -25,7 +25,7 @@ func (rep *reproksie) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer rep.logRequest(r)
 
 	for _, app := range rep.Applications {
-		if app.isMatch(r) {
+		if app.match(*r.URL) {
 			url, err := url.Parse(string(app.Protocol) + "://127.0.0.1:" + strconv.Itoa(app.Port))
 			if err != nil {
 				fmt.Println(err)
@@ -46,18 +46,20 @@ func (rep *reproksie) start(config *Config) error {
 		return fmt.Errorf("No entrypoints defined")
 	}
 
-	for _, entry := range rep.EntryPoints {
+	for _, entryPoint := range rep.EntryPoints {
 		go func(entry *EntryPoint, c chan error) {
 			var err error
-			if entry.Protocol == secure {
+			if entry.Protocol == Secure {
 				err = http.ListenAndServeTLS(entry.Address, entry.TLS.CertFile, entry.TLS.KeyFile, rep)
 			} else {
 				err = http.ListenAndServe(entry.Address, rep)
 			}
 			if err != nil {
 				c <- err
+			} else {
+				fmt.Printf("Started proxy server on address: %s", entry.Address)
 			}
-		}(entry, errors)
+		}(entryPoint, errors)
 	}
 
 	if err := <-errors; err != nil {
@@ -79,17 +81,22 @@ func (rep *reproksie) logRequest(r *http.Request) {
 	}
 }
 
-//isMatch checks if the URL of the request matches the host or path of an application. Path can be a regex string
-func (app *Application) isMatch(r *http.Request) bool {
-	if r.Host == app.Domain {
+//match checks if the URL of the request match the host or path of an application. Path can be a regex string
+func (app *Application) match(url url.URL) bool {
+	if url.Host == app.Domain {
 		return true
 	}
 
-	if r.URL.Path == app.Path {
+	var path string
+	if path = url.Path; url.Path[0] == '/' {
+		path = url.Path[1:]
+	}
+
+	if path == app.Path && len(app.Path) != 0 {
 		return true
 	}
 
-	if match, err := regexp.Match(app.Path, []byte(r.URL.Path)); match && err != nil {
+	if match, err := regexp.Match(app.Path, []byte(path)); match && err == nil && len(app.Path) != 0 {
 		return true
 	}
 

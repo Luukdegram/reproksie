@@ -40,8 +40,8 @@ type TLS struct {
 type Protocol string
 
 const (
-	secure    Protocol = "https"
-	nonSecure          = "http"
+	Secure    Protocol = "https"
+	NonSecure          = "http"
 )
 
 //ParseConfig parses the provided json data and sets all configuration that reproksie needs.
