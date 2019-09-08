@@ -24,9 +24,10 @@ type EntryPoint struct {
 
 //Application can be any program running on a server that is accessable through a port. Reproksie redirects requests on the Application `host` from entrypoints to Application's `port`.
 type Application struct {
-	Host     string
+	Domain   string
 	Port     int
 	Protocol Protocol
+	Path     string
 }
 
 //TLS holds the certificate files data

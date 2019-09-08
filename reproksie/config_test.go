@@ -23,7 +23,7 @@ var configData = []byte(`
     ],
     "applications": [
         {
-            "host": "example.com",
+            "domain": "example.com",
             "port": 8080,
             "protocol": "http"
         }
@@ -37,7 +37,7 @@ func TestParseConfig(t *testing.T) {
 		EntryPoints: []*EntryPoint{
 			&EntryPoint{Name: "http", Address: ":8080"},
 			&EntryPoint{Name: "https", Address: ":4433", Protocol: "https", TLS: TLS{CertFile: "example/test.crt", KeyFile: "example/test.key"}}},
-		Applications: []*Application{&Application{Host: "example.com", Port: 8080, Protocol: "http"}},
+		Applications: []*Application{&Application{Domain: "example.com", Port: 8080, Protocol: "http"}},
 	}
 
 	if err != nil {
