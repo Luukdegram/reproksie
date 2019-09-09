@@ -1,8 +1,14 @@
 package reproksie
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
 	"net/url"
 	"testing"
+	"time"
 )
 
 func TestMatch(t *testing.T) {
@@ -66,5 +72,30 @@ func TestStart(t *testing.T) {
 	err = rep.start(config)
 	if err == nil {
 		t.Error("Expected error with no tls certs, but got nil.")
+	}
+}
+
+func TestLogRequest(t *testing.T) {
+	var b bytes.Buffer
+	writer := io.Writer(&b)
+	logger := log.New(writer, "", log.LstdFlags)
+
+	rep := newReproksie()
+	rep.Logger = logger
+
+	url := "https://localhost:8080/test-run"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rep.logRequest(req)
+	timeFormat := "2006/01/02 15:04:05"
+
+	got := string(b.Bytes())
+	want := fmt.Sprintf("%s \tHOST: localhost:8080 \tPORT: 8080 \tMETHOD: GET \tPATH: /test-run \tIP: \n", time.Now().Format(timeFormat))
+
+	if got != want {
+		t.Errorf("Logrequest gave wrong output:\ngot: \t%s\nwant: \t%s", got, want)
 	}
 }

@@ -72,7 +72,7 @@ func (rep *reproksie) start(config *Config) error {
 //logRequest logs the request made if a path to a logfile was given
 func (rep *reproksie) logRequest(r *http.Request) {
 	if rep.Logger != nil {
-		rep.Logger.Printf("\tHOST: %s \tPORT: %s \tMETHOD: %s \tPATH: %s \tIP: %s \n",
+		rep.Logger.Printf("\tHOST: %s \tPORT: %s \tMETHOD: %s \tPATH: %s \tIP: %s\n",
 			r.Host,
 			r.URL.Port(),
 			r.Method,
