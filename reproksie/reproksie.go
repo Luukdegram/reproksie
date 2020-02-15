@@ -1,10 +1,13 @@
 package reproksie
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"regexp"
 	"strconv"
 )
@@ -12,6 +15,7 @@ import (
 //reproksie redirects a request to the correct internal application. This allows for serving applications to the internet without opening all ports.
 type reproksie struct {
 	Config
+	servers []*http.Server
 }
 
 //newReproksie creates a new Reproksie instance using default parameters
@@ -40,45 +44,68 @@ func (rep *reproksie) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //start starts the reproksie service
 func (rep *reproksie) start(config *Config) error {
 	rep.Config = *config
-	errors := make(chan error)
+
+	if rep.Logger == nil {
+		rep.Logger = log.New(os.Stdout, "", 0)
+	}
 
 	if len(rep.EntryPoints) == 0 {
 		return fmt.Errorf("No entrypoints defined")
 	}
 
-	for _, entryPoint := range rep.EntryPoints {
-		go func(entry *EntryPoint, c chan error) {
-			var err error
-			if entry.Protocol == Secure {
-				err = http.ListenAndServeTLS(entry.Address, entry.TLS.CertFile, entry.TLS.KeyFile, rep)
-			} else {
-				err = http.ListenAndServe(entry.Address, rep)
-			}
-			if err != nil {
-				c <- err
-			} else {
-				fmt.Printf("Started proxy server on address: %s", entry.Address)
-			}
-		}(entryPoint, errors)
+	for _, entry := range rep.EntryPoints {
+		if entry.Protocol == Secure && (entry.TLS.CertFile == "" || entry.TLS.KeyFile == "") {
+			return fmt.Errorf("No TLS certificates were found")
+		}
 	}
 
-	if err := <-errors; err != nil {
-		return err
+	rep.servers = make([]*http.Server, len(rep.EntryPoints))
+
+	for index, entryPoint := range rep.EntryPoints {
+		go func(entry *EntryPoint, index int) {
+			var err error
+			server := &http.Server{
+				Addr:    entry.Address,
+				Handler: rep,
+			}
+			rep.servers[index] = server
+			if entry.Protocol == Secure {
+				err = server.ListenAndServeTLS(entry.TLS.CertFile, entry.TLS.KeyFile)
+			} else {
+				err = server.ListenAndServe()
+			}
+			if err != nil {
+				rep.Logger.Printf("An error occured: %v", err)
+			}
+		}(entryPoint, index)
+
+		rep.Logger.Printf("Started proxy server on address: %s\n", entryPoint.Address)
 	}
 
 	return nil
 }
 
+//shutdown makes sure all services gracefully shutdown
+func (rep *reproksie) shutdown(ctx context.Context) {
+	rep.Logger.Println("Shutting down servers")
+
+	for _, server := range rep.servers {
+		server.SetKeepAlivesEnabled(false)
+		if err := server.Shutdown(ctx); err != nil {
+			rep.Logger.Printf("An error occured while shutting down server on address: %s\n error: %v", server.Addr, err)
+		}
+		rep.Logger.Printf("Successfully shutdown server on address: %s", server.Addr)
+	}
+}
+
 //logRequest logs the request made if a path to a logfile was given
 func (rep *reproksie) logRequest(r *http.Request) {
-	if rep.Logger != nil {
-		rep.Logger.Printf("\tHOST: %s \tPORT: %s \tMETHOD: %s \tPATH: %s \tIP: %s\n",
-			r.Host,
-			r.URL.Port(),
-			r.Method,
-			r.URL.Path,
-			r.RemoteAddr)
-	}
+	rep.Logger.Printf("\tHOST: %s \tPORT: %s \tMETHOD: %s \tPATH: %s \tIP: %s\n",
+		r.Host,
+		r.URL.Port(),
+		r.Method,
+		r.URL.Path,
+		r.RemoteAddr)
 }
 
 //match checks if the URL of the request match the host or path of an application. Path can be a regex string

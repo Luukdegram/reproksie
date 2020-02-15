@@ -20,5 +20,5 @@
             "protocol": "http"
         }
     ],
-    "log_path":"example/test.log"
+    "logPath":"example/test.log"
 }

@@ -1,8 +1,10 @@
 package reproksie
 
 import (
+	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"io/ioutil"
 )
 
@@ -10,6 +12,7 @@ import (
 type App struct {
 	AppConfig
 	flagSet *flag.FlagSet
+	proxy   *reproksie
 }
 
 //AppConfig holds all configurable data such as usage, name, author, etc.
@@ -27,7 +30,9 @@ func NewApp(config AppConfig) *App {
 		flag.NewFlagSet(
 			config.Name,
 			flag.ExitOnError,
-		)}
+		),
+		newReproksie(),
+	}
 	return a
 }
 
@@ -47,18 +52,27 @@ func (app *App) Run(args []string) error {
 		return err
 	}
 
-	prox := newReproksie()
 	config, err := ParseConfig(data)
 	if err != nil {
 		return err
 	}
 	if *background {
-		go prox.start(config)
+		go app.proxy.start(config)
 	} else {
-		err = prox.start(config)
+		err = app.proxy.start(config)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+//Test t
+func Test() {
+	fmt.Println("test")
+}
+
+//Shutdown gracefully shuts the proxy service down
+func (app *App) Shutdown(ctx context.Context) {
+	app.proxy.shutdown(ctx)
 }

@@ -43,7 +43,7 @@ const (
 	//Secure connection using TLS (https)
 	Secure Protocol = "https"
 	//NonSecure connection
-	NonSecure = "http"
+	NonSecure Protocol = "http"
 )
 
 //ParseConfig parses the provided json data and sets all configuration that reproksie needs.
