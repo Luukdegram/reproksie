@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+
+	"gopkg.in/yaml.v2"
 )
 
 //Config holds all configuration data needed to setup Reproksie.
@@ -30,7 +32,7 @@ type Application struct {
 	Path     string
 }
 
-//TLS holds the certificate files data
+//TLS holds the certificate file paths
 type TLS struct {
 	CertFile string
 	KeyFile  string
@@ -46,10 +48,45 @@ const (
 	NonSecure Protocol = "http"
 )
 
-//ParseConfig parses the provided json data and sets all configuration that reproksie needs.
-func ParseConfig(data []byte) (*Config, error) {
+//ConfigParser is an interface that allows for parsing configurations based on their extension.
+type ConfigParser interface {
+	Parse(data []byte) (*Config, error)
+}
+
+//JSONParser is a JSON parser that unmarshals a json config file into Reproksie's config
+type JSONParser struct{}
+
+//YamlParser is a YAML parser that unmarshals a yaml config file into Reproksie's config
+type YamlParser struct{}
+
+//Parse parses the `json` data into a config file.
+func (j *JSONParser) Parse(data []byte) (*Config, error) {
 	var config Config
-	err := json.Unmarshal(data, &config)
+
+	if err := json.Unmarshal(data, &config); err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+
+}
+
+//Parse parses the `yaml` data into a config file
+func (y *YamlParser) Parse(data []byte) (*Config, error) {
+	var config Config
+
+	if err := yaml.Unmarshal(data, &config); err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+
+}
+
+//ParseConfig parses the provided json data and sets all configuration that reproksie needs.
+func ParseConfig(parser ConfigParser, data []byte) (*Config, error) {
+
+	config, err := parser.Parse(data)
 	if err != nil {
 		return nil, err
 	}
@@ -63,5 +100,5 @@ func ParseConfig(data []byte) (*Config, error) {
 		config.Logger = log.New(file, "", log.LstdFlags)
 	}
 
-	return &config, nil
+	return config, nil
 }

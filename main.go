@@ -22,6 +22,7 @@ func main() {
 
 	if err != nil {
 		fmt.Println("An error occured: ", err)
+		os.Exit(2)
 	}
 
 	stop := make(chan os.Signal)

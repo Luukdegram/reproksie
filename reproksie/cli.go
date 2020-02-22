@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 )
 
 //App parses the given arguments and starts a new reverse proxy service
@@ -47,12 +48,22 @@ func (app *App) Run(args []string) error {
 		return errors.New("Missing argument. A config file is required to run Reproksie")
 	}
 
+	ext := filepath.Ext(*configFile)
 	data, err := ioutil.ReadFile(*configFile)
 	if err != nil {
 		return err
 	}
 
-	config, err := ParseConfig(data)
+	var parser ConfigParser
+	if ext == ".json" {
+		parser = &JSONParser{}
+	} else if ext == ".yml" {
+		parser = &YamlParser{}
+	} else {
+		return fmt.Errorf("Unknown config file. Config file requires to be .json or .yml")
+	}
+
+	config, err := ParseConfig(parser, data)
 	if err != nil {
 		return err
 	}
@@ -65,11 +76,6 @@ func (app *App) Run(args []string) error {
 		}
 	}
 	return nil
-}
-
-//Test t
-func Test() {
-	fmt.Println("test")
 }
 
 //Shutdown gracefully shuts the proxy service down

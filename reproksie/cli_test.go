@@ -6,11 +6,25 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	t.Run("Run.Config", func(t *testing.T) {
-		os.Chdir("..")
+	os.Chdir("..")
+	t.Run("Run.Config.JSON", func(t *testing.T) {
 		args := []string{
 			"",
 			"-c=example/config.json",
+			"-b=true",
+		}
+
+		app := NewApp(AppConfig{})
+		err := app.Run(args)
+
+		if err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("Run.Config.YAML", func(t *testing.T) {
+		args := []string{
+			"",
+			"-c=example/config.yml",
 			"-b=true",
 		}
 
